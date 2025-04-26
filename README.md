@@ -8,7 +8,7 @@
 - ### 기술 스택 : Django/ORM/Python/Javascript/JQuery/sqlite/HTML/CSS
 
 - ## 📝 ERD
-<img width="650" alt="mainps" src="https://github.com/user-attachments/assets/dc9feda2-cbb6-489c-a8b3-e85103d99381">
+<img width="250" alt="mainps" src="https://github.com/user-attachments/assets/dc9feda2-cbb6-489c-a8b3-e85103d99381">
 
 - ## 💻 BACH 화면페이지 입니다.
 <img width="850" alt="mainps" src="https://github.com/user-attachments/assets/5f2cf2b8-0bbd-452a-8e1d-c1d31826eaea">
