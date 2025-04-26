@@ -9,8 +9,12 @@
 
 ## 📅개발 기간 :  2024.12 ~ 2025.02 (약 2개월, 개발 1명)
 
+<BR/>
+
  ## 📝 ERD
 <img width="350" alt="mainps" src="https://github.com/user-attachments/assets/dc9feda2-cbb6-489c-a8b3-e85103d99381">
+
+<BR/>
 
 ## 💻 BACH 화면페이지 입니다.
 <img width="800" alt="mainps" src="https://github.com/user-attachments/assets/5f2cf2b8-0bbd-452a-8e1d-c1d31826eaea">
