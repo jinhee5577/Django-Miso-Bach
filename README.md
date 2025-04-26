@@ -7,6 +7,8 @@
 - ### rdbms : SQLite
 - ### 기술 스택 : Django/ORM/Python/Javascript/JQuery/sqlite/HTML/CSS
 
+## 📅개발 기간 :  2024.12 ~ 2025.02 (약 2개월, 개발 1명)
+
 - ## 📝 ERD
 <img width="350" alt="mainps" src="https://github.com/user-attachments/assets/dc9feda2-cbb6-489c-a8b3-e85103d99381">
 
