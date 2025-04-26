@@ -1,0 +1,19 @@
+{% extends './base_layout.html' %}
+
+        <!-- sub contents -->
+      <div id="container">
+        {% block container %}
+            <!-- 서브타이틀 시작-->
+            {% block titleArea %}
+            {% endblock %}
+
+            <!-- sub 내용 시작-->
+            {% block mainContent%}
+              {% block schBox %}
+              
+              {% endblock %}
+            {% endblock %}
+            <!-- //sub 내용 종료-->
+           
+        {% endblock %}
+      </div>

@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=Edge">
+<meta name="format-detection" content="telephone=no">
+<title>BRL</title>
+<link rel="stylesheet" href="../resources/css/layout.css">
+<!--[if lt IE 9]>
+<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+<script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+<script>alert("브라우저를 버전업데이트 해주세요.");</script>
+<![endif]-->
+<script src="../resources/js/jquery-3.7.1.min.js"></script>
+<script src="../resources/js/jquery-migrate-3.4.0.min.js"></script>
+</head>
+<body>
+<div id="u-skip">
+    <a class="go-content" href="#contents" onclick="document.getElementById('contents').tabIndex=-1;document.getElementById('contents').focus();return false;">
+        <span>본문 바로가기</span>
+    </a>
+</div>
+<div id="wrap"> 
+    <!-- 헤더 -->
+    <div id="header">
+        <div class="util">
+            <div class="util-inner">
+                <a href="">HELP</a>
+            </div>
+        </div>
+        <div class="head-inner">
+            <h1 class="logo"><a href="#"><strong>BRL</strong>Single Cell</a></h1>  
+            <ul class="gnb">
+                <li class="on"><a href="">SEARCH</a></li>
+                <li><a href="">ABOUT</a></li>
+            </ul>
+        </div>
+    </div>
+    <!-- //헤더 -->
+    <!-- 콘테이너 -->
+    <div id="container">
+        <div class="sub-vis-area">
+            <div class="sub-vis-txt">
+                <h2 class="page-tit-h2">SEARCH</h2>
+                <div class="path">
+					<a class="home" href="">HOME</a>
+					<a class="page" href="">SEARCH</a>
+				</div>
+            </div>
+        </div>
+        <!-- 콘텐츠 -->	
+        <div id="contents">
+            <div class="cont-inner">
+                <h3 class="page-tit-h3">Search Results</h3>
+                <div class="cont-sch-box">
+                    <span class="input-set">
+                        <label for="ipt1-1">Technique</label>
+                        <select id="ipt1-1" name="ipt1">
+                            <option value="all">All</option>
+                            <option value="1">Method 1</option>
+                            <option value="2">Method 2</option>
+                            <option value="3">Method 3</option>
+                        </select>
+                    </span>
+                    <span class="input-set">
+                        <label for="ipt1-2">검색어</label>
+                        <select id="ipt1-2" name="ipt1">
+                            <option value="all">All</option>
+                            <option value="1">Method 1</option>
+                            <option value="2">Method 2</option>
+                            <option value="3">Method 3</option>
+                        </select>
+                        <input type="text" id="ipt1-3" name="ipt1" class="input-data">
+                        <button type="button" class="btn btn-md btn-primary">검색</button>
+                    </span>
+                </div>
+                <!-- 테이블(스크롤) -->
+                <div class="tbl-board-box tbl-board-scroll">
+                    <table class="tbl-board">
+                        <caption>리스트테이블</caption>
+                        <colgroup>
+                            <col>
+                            <col>
+                            <col>
+                            <col>
+                            <col>
+                            <col>
+                        </colgroup>
+                        <thead>
+                            <tr>
+                                <th scope="col">ID</th>
+                                <th scope="col">Gene</th>
+                                <th scope="col">Tissue</th>
+                                <th scope="col">Replication</th>
+                                <th scope="col">Technique</th>
+                                <th scope="col">Browse</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>CTHL-LC-SC-01</td>
+                                <td>KCTD12</td>
+                                <td>Lung</td>
+                                <td>-</td>
+                                <td>Single Cell Sequencing</td>
+                                <td><a class="link" href="">Browse</a></td>
+                            </tr>
+                            <tr>
+                                <td>CTHL-LC-SC-01</td>
+                                <td>KCTD12</td>
+                                <td>Lung</td>
+                                <td>Layer 1</td>
+                                <td>Spatial Transcriptomics_Visium</td>
+                                <td><a class="link" href="">Browse</a></td>
+                            </tr>
+                            <tr>
+                                <td>CTHL-LC-SC-01</td>
+                                <td>KCTD12</td>
+                                <td>Lung</td>
+                                <td>Layer 1</td>
+                                <td>Spatial Transcriptomics_Venium</td>
+                                <td><a class="link" href="">Browse</a></td>
+                            </tr>
+                            <tr>
+                                <td>CTHL-LC-SC-01</td>
+                                <td>KCTD12</td>
+                                <td>Lung</td>
+                                <td>Layer 1</td>
+                                <td>Spatial Transcriptomics_Venium</td>
+                                <td><a class="link" href="">Browse</a></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- //테이블(스크롤) -->
+                <!-- 탭 -->
+                <ul class="tab-menu">
+                    <li><a href="search_1.html">UMAP</a></li>
+                    <li class="on"><a href="search_2.html">Plots</a></li>
+                </ul>
+                <!-- //탭 -->
+                <div class="result-wrap">
+                    <div class="form-area">
+                        <div class="cols-group">
+                            <div class="col">
+                                <div class="form-box">
+                                    <span class="tit">Plots</span>
+                                    <div class="chk-list">
+                                        <span class="input-set">
+                                            <input type="checkbox" id="ipt2-1" name="ipt2"> 
+                                            <label for="ipt2-1"><span class="ico-color" style="background-color: #e41a1c;"></span>Tumor</label>
+                                        </span>
+                                        <span class="input-set">
+                                            <input type="checkbox" id="ipt2-2" name="ipt2"> 
+                                            <label for="ipt2-2"><span class="ico-color"></span>CD4+ Tn</label>
+                                        </span>
+                                        <span class="input-set">
+                                            <input type="checkbox" id="ipt2-3" name="ipt2"> 
+                                            <label for="ipt2-3"><span class="ico-color"></span>CD4+ Tn</label>
+                                        </span>
+                                        <span class="input-set">
+                                            <input type="checkbox" id="ipt2-4" name="ipt2"> 
+                                            <label for="ipt2-4"><span class="ico-color"></span>CD4+ Tn</label>
+                                        </span>
+                                        <span class="input-set">
+                                            <input type="checkbox" id="ipt2-5" name="ipt2"> 
+                                            <label for="ipt2-5"><span class="ico-color"></span>CD4+ Tn</label>
+                                        </span>
+                                        <span class="input-set">
+                                            <input type="checkbox" id="ipt2-6" name="ipt2"> 
+                                            <label for="ipt2-6"><span class="ico-color"></span>CD4+ Tn</label>
+                                        </span>
+                                        <span class="input-set">
+                                            <input type="checkbox" id="ipt2-7" name="ipt2"> 
+                                            <label for="ipt2-7"><span class="ico-color"></span>CD4+ Tn</label>
+                                        </span>
+                                        <span class="input-set">
+                                            <input type="checkbox" id="ipt2-8" name="ipt2"> 
+                                            <label for="ipt2-8"><span class="ico-color"></span>CD4+ Tn</label>
+                                        </span>
+                                        <span class="input-set">
+                                            <input type="checkbox" id="ipt2-9" name="ipt2"> 
+                                            <label for="ipt2-9"><span class="ico-color"></span>CD4+ Tn</label>
+                                        </span>
+                                        <span class="input-set">
+                                            <input type="checkbox" id="ipt2-10" name="ipt2"> 
+                                            <label for="ipt2-10"><span class="ico-color"></span>CD4+ Tn</label>
+                                        </span>
+                                        <span class="input-set">
+                                            <input type="checkbox" id="ipt2-11" name="ipt2"> 
+                                            <label for="ipt2-11"><span class="ico-color"></span>CD4+ Tn</label>
+                                        </span>
+                                        <span class="input-set">
+                                            <input type="checkbox" id="ipt2-12" name="ipt2"> 
+                                            <label for="ipt2-12"><span class="ico-color"></span>CD4+ Tn</label>
+                                        </span>
+                                        <span class="input-set">
+                                            <input type="checkbox" id="ipt2-13" name="ipt2"> 
+                                            <label for="ipt2-13"><span class="ico-color"></span>CD4+ Tn</label>
+                                        </span>
+                                        <span class="input-set">
+                                            <input type="checkbox" id="ipt2-14" name="ipt2"> 
+                                            <label for="ipt2-14"><span class="ico-color"></span>CD4+ Tn</label>
+                                        </span>
+                                        <span class="input-set">
+                                            <input type="checkbox" id="ipt2-15" name="ipt2"> 
+                                            <label for="ipt2-15"><span class="ico-color"></span>CD4+ Tn</label>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-lg btn-primary">Submit</button>
+                    </div>
+                    <div class="chart-area">
+                        <div class="chart inner">
+                            <!-- chart 영역(chart 적용시 inner 클래스 삭제) -->
+                            Auto x 480px
+                            <!-- //chart 영역 -->
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+        <!-- //콘텐츠 -->	
+    </div>
+    <!-- //콘테이너 -->
+    <!-- 푸터 -->
+    <div id="footer">
+        <div class="foot-inner">
+            <span class="copy">Copyright © 2024 THE CATHOLIC UNIVERSITY OF KOREA All Right Reserved.</span>
+        </div>
+    </div>
+    <!-- //푸터 -->
+</div>
+<!--
+<script type="text/javascript">
+$(function() {
+    // skip navigation
+    $('#u-skip a').on('click', function(e) {
+        e.preventDefault();
+        $('html, body').animate({scrollTop: $('#contents').offset().top}, 500);
+    });
+});
+</script>
+-->
+</body>
+</html>

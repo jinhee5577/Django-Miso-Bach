@@ -1,0 +1,28 @@
+
+{% extends './layout/main_layout.html' %}
+{% load static %} 
+
+        <!-- 콘테이너 -->
+       {% block container%}
+        <div class="main-vis-area">
+            <span class="main-vis"></span>
+            <div class="main-vis-txt">
+                <strong>BASIC RESEARCH LAB</strong>
+                <span>THE CATHOLIC UNIVERSITY OF KOREA</span>
+            </div>
+        </div>
+        <!-- 콘텐츠 -->	
+        <div id="contents">
+            <div class="cont-inner Summary-inner">
+                <h2 class="page-tit-h2">Summary</h2>
+                <div class="summary-area inner">
+                    <!-- summary 영역(summary 적용시 inner 클래스 삭제) -->
+                    1140 x Auto
+                    <!-- //summary 영역 -->
+                </div>
+            </div>
+        </div>
+        <!-- //콘텐츠 -->	
+        {% endblock %}
+        <!-- //콘테이너 -->
+

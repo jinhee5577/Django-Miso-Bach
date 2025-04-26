@@ -1,0 +1,1150 @@
+{% extends './layout/sub_layout.html' %}
+    {% load static %}
+    {% block script%}
+        <script type="text/javascript">
+            //  클릭탭 보이는 함수
+            let showTab;
+            // visium chart 전역변수
+            let chart;
+
+            // 선택한 cell만 데이터 가져온후 Umap차트그려주는 비동기함수.
+            let getSelectedCell;
+            // 선택한 region만 데이터 가져온후 visium차트그려주는 비동기함수.
+            let getSelectedRegion;
+            let smplId;
+            let drawVisiumChart;
+            let visiumTab = false;
+            let chartON = false;
+
+            // Visium Region type선택옵션창 보이는 함수
+            let showRegionType;
+
+            const tissueImgList = {
+                1: "{% static 'img/T204_tissue_hires_image.png' %}",
+                2: "{% static 'img/T209_tissue_hires_image.png' %}",
+                3: "{% static 'img/T211_tissue_hires_image.png' %}",
+                4: "{% static 'img/T215_tissue_hires_image.png' %}",
+                5: "{% static 'img/T219_tissue_hires_image.png' %}",
+                6: "{% static 'img/T223_tissue_hires_image.png' %}",
+                7: "{% static 'img/T235_tissue_hires_image.png' %}",
+                8: "{% static 'img/T245_tissue_hires_image.png' %}",
+                9: "{% static 'img/T247_tissue_hires_image.png' %}",
+                10: "{% static 'img/T255_tissue_hires_image.png' %}",
+                11: "{% static 'img/T264_tissue_hires_image.png' %}",
+                12: "{% static 'img/T268_tissue_hires_image.png' %}",
+                13: "{% static 'img/T276_tissue_hires_image.png' %}",
+                14: "{% static 'img/T280_tissue_hires_image.png' %}",
+                15: "{% static 'img/T288_tissue_hires_image.png' %}",
+                16: "{% static 'img/T313_tissue_hires_image.png' %}",
+                17: "{% static 'img/T317_tissue_hires_image.png' %}",
+                18: "{% static 'img/T318_tissue_hires_image.png' %}",
+                19: "{% static 'img/T320_tissue_hires_image.png' %}"
+            };
+
+            $(document).ready(function() {
+                //gene 검색조건 엔터 이벤트
+                const inputObj = document.getElementById('geneSearch');
+                inputObj.addEventListener('keydown', (event) => {
+                    if (event.key === 'Enter') {
+                        getSearchVisiumList();
+                    }
+                });
+
+                const root = am5.Root.new("chartdivV");
+                    root.setThemes([
+                    am5themes_Animated.new(root)
+                ]);
+
+                root._logo.dispose(); // amCharts 로고 제거
+
+                // Visium_chart 그리는 함수
+                drawVisiumChart = (chartData, smplId) => {
+                    if (chart) {
+                        chart.dispose(); // 기존 차트 제거
+                    }
+                    
+                    // 배경 이미지 추가
+                    root.container.children.push(am5.Picture.new(root, {
+                        x : 10,
+                        y : 40,
+                        width : am5.percent(99),
+                        height : am5.percent(80),
+                        src: `http://localhost:8000${tissueImgList[smplId]}`
+                        })
+                    );
+
+                    chart = root.container.children.push(am5xy.XYChart.new(root, {}));
+                    chart.gridContainer.set("opacity", 0)
+
+                    var xAxis = chart.xAxes.push(am5xy.ValueAxis.new(root, {
+                        renderer: am5xy.AxisRendererX.new(root, { minGridDistance: 50, inside: true }),
+                        min: -17,
+                        max: 140,
+                        strictMinMax: true,
+                        opacity:1
+                    }));
+        
+                    var yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, {
+                        renderer: am5xy.AxisRendererY.new(root, { inside: true, inversed: true }),
+                        min: -12.5,
+                        max: 84,
+                        strictMinMax: true,
+                        opacity:1
+                    }));
+
+                    // y축 레전드 위치 이렇게 조절함!!
+			    	yAxis.get("renderer").labels.template.set("dy", -35);
+        
+                    var series = chart.series.push(am5xy.LineSeries.new(root, {
+                        calculateAggregates: true,
+                        xAxis: xAxis,
+                        yAxis: yAxis,
+                        valueYField: "y",
+                        valueXField: "x",
+                        valueField: "value"
+                    }));    
+        
+                    var circleTemplate = am5.Template.new({});
+
+                    series.bullets.push(function() {
+                        var graphics = am5.Circle.new(root, {
+                            fill: series.get("fill"),
+                            tooltipText: "{name} {value}",
+                            tooltipY: -am5.p50,
+                            opacity: 0.7
+                    }, circleTemplate);
+        
+                    graphics.adapters.add("x", function(x, target) {
+                        target.set("radius", Math.min(Math.abs(xAxis.getX(0, 1, 0) - xAxis.getX(1, 1, 0)), Math.abs(yAxis.getY(0, 1, 0) - yAxis.getY(1, 1, 0))) / 1.7);
+                        return x;
+                    })
+        
+                    return am5.Bullet.new(root, {
+                        sprite: graphics
+                    });
+                    });
+        
+                    // another bullet for label
+                    series.bullets.push(function() {
+                        var label = am5.Label.new(root, {
+                            populateText: true,
+                            centerX: am5.p50,
+                            centerY: am5.p50,
+                            text: "{short}"
+                    });
+        
+                    return am5.Bullet.new(root, {
+                            sprite: label
+                        });
+                    });
+                    
+                    // Add heat legend 
+                    var heatLegend = chart.bottomAxesContainer.children.push(am5.HeatLegend.new(root, {
+                        orientation: "horizontal",
+                        endColor: am5.color(0xfe131a),
+                        startColor: am5.color(0xfffb77),
+                        height: 50,
+                        endValue: 2
+                    }));
+
+                    circleTemplate.events.on("pointerover", function(event) {
+                        var di = event.target.dataItem;
+                        if (di) {
+                            heatLegend.showValue(di.get("value", 0));
+                        }
+                    });
+            
+                    series.events.on("datavalidated", function() {
+                        heatLegend.set(series.getPrivate("valueLow")); 
+                        heatLegend.set(series.getPrivate("valueHigh"));
+                    });
+
+                    // HeatLegend 위치 조정
+                    heatLegend.setAll({
+                      //  x: am5.percent(80),  // X 위치 (퍼센트 또는 픽셀)
+                        y: am5.percent(-10),  // Y 위치 (퍼센트 또는 픽셀)
+                        centerX: am5.p250,   // 중앙 정렬
+                        centerY: am5.p250
+                    });
+                    // end heat legend 
+
+                    series.set("heatRules", [{
+                        target: circleTemplate,
+                        min: am5.color(0xfffb77),
+                        max: am5.color(0xfe131a),
+                        dataField: "value",
+                        key: "fill"
+                    }]);
+        
+                    series.strokes.template.set("strokeOpacity", 0);
+        
+                    // loop through all items and add 0,5 to all items in odd rows
+                    am5.array.each(chartData, function(di) {
+                        if (di.y / 2 == Math.round(di.y / 2)) {
+                            di.x += 0.5;
+                        }
+                    })
+        
+                    series.data.setAll(chartData);
+                    series.appear(1000);
+                    chart.appear(1000, 100);                
+                };
+
+                const rootu = am5.Root.new("chartdivUM");
+                // Set themes
+                rootu.setThemes([
+                    am5themes_Animated.new(rootu)
+                ]);
+    
+                rootu._logo.dispose(); // amCharts 로고 제거
+
+                let chartu;
+               // umap차트 그리는 함수.
+               // 함수 표현식은 호이스팅되지 않음
+               const draw_searchUmapChart = (UmapList) => {
+                    if (chartu) {
+                        chartu.dispose(); // 기존 차트 제거
+                    }
+                    // Create chart
+                    chartu = rootu.container.children.push(am5xy.XYChart.new(rootu, {
+                        panX: true,
+                        panY: true,
+                        wheelY: "zoomXY",
+                        pinchZoomX: true,
+                        pinchZoomY: true
+                    }));
+    
+                    // Create axes
+                    const xAxis = chartu.xAxes.push(am5xy.ValueAxis.new(rootu, {
+                        renderer: am5xy.AxisRendererX.new(rootu, { minGridDistance: 50 }),
+                        tooltip: am5.Tooltip.new(rootu, {})
+                    }));
+    
+                    var yAxis = chartu.yAxes.push(am5xy.ValueAxis.new(rootu, {
+                        renderer: am5xy.AxisRendererY.new(rootu, {}),
+                        tooltip: am5.Tooltip.new(rootu, {})
+                    }));
+    
+                    // Create series
+                    var series = chartu.series.push(am5xy.LineSeries.new(rootu, {
+                        xAxis: xAxis,
+                        yAxis: yAxis,
+                        valueYField: "y",
+                        valueXField: "x",
+                        valueField: "value",
+                        tooltip: am5.Tooltip.new(rootu, {
+                            labelText: "x: {valueX}, y: {valueY}, value: {value}"
+                        })
+                    }));
+    
+                    series.strokes.template.set("visible", false);
+    
+                    // Add cursor
+                    chartu.set("cursor", am5xy.XYCursor.new(rootu, {
+                        xAxis: xAxis,
+                        yAxis: yAxis,
+                        snapToSeries: [series]
+                    }));                                                                                                  
+    
+                    const data = [];
+                    for (let i = 0; i < UmapList.length; i++) {
+                        if (UmapList[i]['visium_region'] == 'Fibroblast high') {
+                            data.push({ x: parseFloat(UmapList[i]['umap_1']), y: parseFloat(UmapList[i]['umap_2']), color: am5.Color.fromString("#67DADC"), value: 6.5 });
+                        } else if (UmapList[i]['visium_region'] == 'MT high') {
+                            data.push({ x: parseFloat(UmapList[i]['umap_1']), y: parseFloat(UmapList[i]['umap_2']), color: am5.Color.fromString("#8067DC"), value: 6.5 });
+                        } else if (UmapList[i]['visium_region'] == 'B/Plasma B high') {
+                            data.push({ x: parseFloat(UmapList[i]['umap_1']), y: parseFloat(UmapList[i]['umap_2']), color: am5.Color.fromString("#6771DC"), value: 6.5 });
+                        } else if (UmapList[i]['visium_region'] == 'Tumor high') {
+                            data.push({ x: parseFloat(UmapList[i]['umap_1']), y: parseFloat(UmapList[i]['umap_2']), color: am5.Color.fromString("#F97300"), value: 6.5 });
+                        } else if (UmapList[i]['visium_region'] == 'Tumor/Myeloid high') {
+                            data.push({ x: parseFloat(UmapList[i]['umap_1']), y: parseFloat(UmapList[i]['umap_2']), color: am5.Color.fromString("#A367DC"), value: 6.5 });
+                        } else if (UmapList[i]['visium_region'] == 'SMC high') {
+                            data.push({ x: parseFloat(UmapList[i]['umap_1']), y: parseFloat(UmapList[i]['umap_2']), color: am5.Color.fromString("#C767DC"), value: 6.5 });
+                        } else if (UmapList[i]['visium_region'] == 'Endothelial high') {
+                            data.push({ x: parseFloat(UmapList[i]['umap_1']), y: parseFloat(UmapList[i]['umap_2']), color: am5.Color.fromString("#DC67CE"), value: 6.5 });
+                        } else if (UmapList[i]['visium_region'] == 'T high') {
+                            data.push({ x: parseFloat(UmapList[i]['umap_1']), y: parseFloat(UmapList[i]['umap_2']), color: am5.Color.fromString("#67DCBB"), value: 6.5 });
+                        } else if (UmapList[i]['visium_region'] == 'Myeloid high') {
+                            data.push({ x: parseFloat(UmapList[i]['umap_1']), y: parseFloat(UmapList[i]['umap_2']), color: am5.Color.fromString("#7DDC67"), value: 6.5 });
+                        }  else if (UmapList[i]['visium_region'] == 'Tumor/B high') {
+                            data.push({ x: parseFloat(UmapList[i]['umap_1']), y: parseFloat(UmapList[i]['umap_2']), color: am5.Color.fromString("#67DC98"), value: 6.5 });
+                        } 
+                    }
+    
+                    // add graphics to line series which will contain bullets
+                    var canvasBullets = series.children.push(am5.Graphics.new(rootu, {}));
+    
+                    canvasBullets.set("draw", (display) => {
+                        // loop through all data items 
+                        am5.array.each(series.dataItems, (dataItem) => {
+                            // set fill style from data context
+                            var dataContext = dataItem.dataContext;
+                            if (dataContext) {
+                                const point = dataItem.get("point");
+                                if (point) {
+                                    display.beginPath();
+                                    display.beginFill(dataContext.color);
+                                    display.drawCircle(point.x, point.y, dataContext.value / 5);
+                                    display.endFill();
+                                    }
+                            }    
+                        })
+                    });            
+    
+                    // user data is set on each redraw, so we use this to mark draw as dirty
+                    series.strokes.template.on("userData", drawBullets);
+    
+                    function drawBullets() {
+                        canvasBullets._markDirtyKey("draw");
+                    }
+    
+                    series.data.setAll(data);
+               };
+
+                // region type 옵션창 각필드 원에 색상 분리해주는 함수선언.
+                const divideRegionTypeColorFn = (key, ele) => {
+                    const circlem = document.querySelector(`.${ele}`);
+                    if(key == 'Fibroblast high'){ circlem.style.backgroundColor = "#67DADC"; }
+                    else if(key == 'MT high'){ circlem.style.backgroundColor = "#8067DC"; }
+                    else if(key == 'B/Plasma B high'){ circlem.style.backgroundColor = "#6771DC"; }
+                    else if(key == 'Tumor high'){ circlem.style.backgroundColor = "#F97300"; }
+                    else if(key == 'Tumor/Myeloid high'){ circlem.style.backgroundColor = "#A367DC"; }
+                    else if(key == 'SMC high'){ circlem.style.backgroundColor = "#C767DC"; }
+                    else if(key == 'Endothelial high'){ circlem.style.backgroundColor = "#DC67CE"; }
+                    else if(key == 'T high'){ circlem.style.backgroundColor = "#67DCBB"; }
+                    else if(key == 'Myeloid high'){ circlem.style.backgroundColor = "#7DDC67"; }
+                    else if(key == 'Tumor/B high'){ circlem.style.backgroundColor = "#67DC98"; }
+                };
+
+                // SearchUmapChart 데이터 가져오는 함수.
+                // 함수 표현식은 호이스팅되지 않음
+                const getSearchUmapData = async () => {
+                    try {
+                        $('#spinnerp').show(); // 스피너표시
+                        $('#lodingum').show();
+                        $('#bgHideSu').show();  
+                        $('#chartdivUM').hide();
+                        const res = await fetch('/get_searchUmap');
+                        const UmapResult = await res.json();
+                        
+                       // console.log(UmapResult.regionType);
+
+                        //  좌측 RegionType 옵션창 각필드 네임 넣어줌.
+                        const Plots_opArr = document.querySelector('.region-list');
+
+                        // PLOTS 옵션창에 계속해서 배열이 추가 되므로 기존 생성된 테그 먼저 삭제시킴.
+                        $('.regionFrom').find('.input-set').remove();
+
+                        UmapResult.regionType.forEach((type,i) => {
+                            const span = document.createElement('span');
+                            span.classList.add('input-set');
+                            span.innerHTML = `
+                                <input type="checkbox" id="iptSU-${i+1}" name="regionType" class="fineUmapCell" value="${type.visium_region}"> 
+                                <label for="iptSU-${i+1}"><span class="ico-color circleUf${i+1}"></span>${type.visium_region}</label>
+                            `;
+                            Plots_opArr.appendChild(span);
+
+                            // region type 옵션창 각필드 원에 색상 분리해주는 함수호출.
+                            divideRegionTypeColorFn(type.visium_region, `circleUf${i+1}`);
+                        });
+
+                        $('#spinnerp').hide(); // 스피너 숨김
+                        $('#lodingum').hide();
+                        $('#bgHideSu').hide();
+                        // 초기 렌더링시 체크박스가 all체크로 선택되어 있어야함.
+                        // region type 부문.
+                        $("input[name=regionType]").prop("checked", true);
+                        $("#region_chkAll").prop("checked", true);
+                        $('#chartdivUM').show();
+
+                        // umap차트 그리는 함수에 데이터 넘겨줌.
+                        draw_searchUmapChart(UmapResult.searchUmapList);
+                    } catch (e) {
+                        $('#spinnerp').hide(); // 스피너 숨김
+                        $('#lodingum').hide();
+                        $('#bgHideSu').hide();
+                        console.log(e);
+                    }
+                };
+
+                // 페이지 로드되자마자 호출됨.
+                getSearchUmapData();
+                
+                // 선택한 cell만 데이터 가져온후 Umap차트그려주는 비동기함수.
+                getSelectedCell = async () => {
+                    const selectedCell = []; 
+                    // 선택한 체크박스 모두 가져오기.
+                    let selectCheckBoxs = document.querySelectorAll('.regionFrom input[name="regionType"]:checked');
+
+                    //필터 체크여부 확인
+                    if (selectCheckBoxs.length < 1) {
+                        alert('Please check one more filter.');
+                        return;
+                    }
+                    $.blockUI({
+                        message : '', 
+                        });
+
+                    // 체크한박스의 값을 arr에 추가함.
+                    selectCheckBoxs.forEach((ele) => {
+                        selectedCell.push(ele.value);
+                    }); 
+
+                    $('#bgHideSu').show();
+                    $('#spinnerp').show(); // 스피너 표시
+                    $('#lodingum').show();
+                    $('#chartdivUM').hide();
+                    // CSRF 토큰 가져오기
+                    const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+
+                    try{
+                        const res = await fetch('/get_umapSelectedSearchData ',{
+                            method: "POST",
+                            headers: {
+                                'Content-Type': 'application/json', // 요청 본문의 데이터 타입 지정
+                                'X-CSRFToken': csrfToken,          // CSRF 토큰 추가
+                            },
+                            body: JSON.stringify({
+                                choosedCells: selectedCell,
+                            }),
+                        });
+                        const cellDataResult = await res.json();
+
+                        $('#spinnerp').hide(); // 스피너 숨김
+                        $('#lodingum').hide();
+                        $('#bgHideSu').hide();
+                        $('#chartdivUM').show();
+
+                        // fine_celltype Plots차트 그려줌.
+                        draw_searchUmapChart(cellDataResult.choosedCellsData);
+                    }catch(e){
+                        $('#spinnerp').hide(); // 스피너 숨김
+                        $('#lodingum').hide();
+                        $('#bgHideSu').hide();
+                        console.log(e);
+                    }
+
+                    $.unblockUI();
+                };
+
+                // 선택한 region만 데이터 가져온후 visium차트그려주는 비동기함수.
+                getSelectedRegion = async () => {
+                    const selectedCell = []; 
+                    // 선택한 체크박스 모두 가져오기.
+
+                    let selectCheckBoxs = [];
+                    if ($('#visiumRegion').val() == 1) {
+                        selectCheckBoxs = document.querySelectorAll('.VregionFrom1 input[name="VregionType"]:checked');
+                    } else if ($('#visiumRegion').val() == 2) {
+                        selectCheckBoxs = document.querySelectorAll('.VregionFrom2 input[name="VeachRegion"]:checked');
+                    }
+
+                    //필터 체크여부 확인
+                    if (selectCheckBoxs.length < 1) {
+                        alert('Please check one more filter.');
+                        return;
+                    }
+
+                    $.blockUI({
+                        message : '', 
+                        });
+
+                    // 체크한박스의 값을 arr에 추가함.
+                    selectCheckBoxs.forEach((ele) => {
+                        selectedCell.push(ele.value);
+                    }); 
+
+                    $('#spinnerV').show(); // 스피너표시
+                    $('#lodingumV').show();
+                    $('#bgHideSv').show();
+                    $('#chartdivV').hide();
+                    // CSRF 토큰 가져오기
+                    const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+
+                    try{
+                        const res = await fetch('/get_visiumSelectedSearchData ',{
+                            method: "POST",
+                            headers: {
+                                'Content-Type': 'application/json', // 요청 본문의 데이터 타입 지정
+                                'X-CSRFToken': csrfToken,          // CSRF 토큰 추가 
+                            },
+                            body: JSON.stringify({
+                                choosedRegion: selectedCell,
+                                smplId: Number(smplId),
+                                regionTypeNum: $('#visiumRegion').val(),
+                                gene_name: globalGeneName
+                            }),
+                        });
+                        const regionVisiumData = await res.json();
+
+                        $('#spinnerV').hide(); // 스피너 숨김
+                        $('#lodingumV').hide();
+                        $('#bgHideSv').hide();
+                        $('#chartdivV').show();
+
+                        // 선택한 region data로 visium차트 그려줌.
+                        drawVisiumChart(regionVisiumData.choosedRegionData, smplId);
+                    }catch(e){
+                        $('#spinnerV').hide(); // 스피너 숨김
+                        $('#lodingumV').hide();
+                        $('#bgHideSv').hide();
+                        console.log(e);
+                    }
+
+                    $.unblockUI();
+                };
+
+                //  클릭탭 보이는 함수
+                showTab = (aObj, num) => {
+                    const tabArr = document.querySelectorAll('.menu');
+
+                    tabArr.forEach((node) => {
+                        node.classList.remove('on');
+                    });                
+                   
+                    //탭 차트 옵션창 보이기
+                    const tabMapArr = document.querySelectorAll('.map_box');
+
+                    tabMapArr.forEach((node) => {
+                        node.style.display = 'none';
+                    });
+
+                    if (!visiumTab && num == '2') {
+                        $('#spinnerV').hide(); // 스피너숨김
+                        $('#lodingumV').hide();
+                        $('#bgHideSv').hide();
+                        window.alert('Please enter your search conditions.');
+                        
+                        // 이미 렌더링된 기존umap차트 모습 유지 시켜줌.
+                        tabArr[0].classList.add('on'); 
+                        document.querySelector(`.map_box1`).style.display = 'block flex';
+                    } else if (!chartON && num == '2') {
+                         window.alert('Please click the chart button.');
+                         // 이미 렌더링된 기존umap차트 모습 유지 시켜줌.
+                         tabArr[0].classList.add('on'); 
+                         document.querySelector(`.map_box1`).style.display = 'block flex';
+                         return;
+                    } else {
+                        aObj.parentElement.classList.add('on');
+                        document.querySelector(`.map_box${num}`).style.display = 'block flex';
+                    }
+
+                    {% comment %} if (num == '1') {
+                        getSearchUmapData();
+                    } {% endcomment %}
+                }
+            });
+
+            let visiumRegionData = {};
+            let visiumBgCnt = 0; 
+
+            // 비지움 차트 좌표데이터 가져오는 함수
+            const getVisiumChartData = async (sampleId, searchVal) => {
+                // 바로 Visium텝 으로 보여줌.
+                const tabArr = document.querySelectorAll('.menu');
+
+                tabArr.forEach((node) => {
+                    node.classList.remove('on');
+                });
+
+                tabArr[1].classList.add('on');
+        
+                //탭 차트 옵션창 보이기
+                const tabMapArr = document.querySelectorAll('.map_box');
+
+                tabMapArr.forEach((node) => {
+                    node.style.display = 'none';
+                });
+
+                if (visiumBgCnt != 0) {
+                    const bgHideSv = document.getElementById("bgHideSv");
+                    bgHideSv.style.height = '546px'; 
+                }
+
+                document.querySelector(`.map_box2`).style.display = 'block flex';
+                $('#spinnerV').show(); // 스피너표시
+                $('#lodingumV').show();
+                $('#bgHideSv').show();
+                $('#chartdivV').hide();
+
+                try{
+                    const res = await fetch(`/draw_visium_chart?smpid=${sampleId}&gene=${searchVal}`);
+                    const result = await res.json();
+                    visiumRegionData = result;
+
+                    //  좌측 RegionType 옵션창 각필드 네임 넣어줌.
+                    const Region_arr = document.querySelectorAll('.Vregion-list');
+
+                    // PLOTS 옵션창에 계속해서 배열이 추가 되므로 기존 생성된 테그 먼저 삭제시킴.
+                    $('.VregionFrom1').find('.input-set').remove();
+                    $('.VregionFrom2').find('.input-set').remove();
+
+                    Region_arr.forEach((node, i) => {
+                        if (i == 0) { // regionType 옵션창 체크박스 생성
+                            result.regionType.forEach((type, j) => {
+                                const span = document.createElement('span');
+                                span.classList.add('input-set');
+                                span.innerHTML = `
+                                    <input type="checkbox" id="iptSV-${j+1}" name="VregionType" class="fineUmapCell" value="${type.intgrt_clustr_rgin}"> 
+                                    <label for="iptSV-${j+1}">${type.intgrt_clustr_rgin}</label>
+                                `;
+                                node.appendChild(span);
+                            });
+                        } else if (i == 1) { // Each regionType 옵션창 체크박스 생성
+                            result.Each_region.forEach((type, j) => {
+                                const span = document.createElement('span');
+                                span.classList.add('input-set');
+                                span.innerHTML = `
+                                    <input type="checkbox" id="iptSVe-${j+1}" name="VeachRegion" class="fineUmapCell" value="${type.each_smpl_rgin}"> 
+                                    <label for="iptSVe-${j+1}">${type.each_smpl_rgin}</label>
+                                `;
+                                node.appendChild(span);
+                            });
+                        }
+                    });                    
+                    
+                    $('#spinnerV').hide(); // 스피너숨김
+                    $('#lodingumV').hide();
+                    $('#bgHideSv').hide();
+                    // 초기 렌더링시 체크박스가 all체크로 선택되어 있어야함.
+                    // region type 부문.
+                    $("input[name=VregionType]").prop("checked", true);
+                    $("#Vregion_chkAll").prop("checked", true);
+                    // Each regionType 부문
+                    $("input[name=VeachRegion]").prop("checked", true);
+                    $("#VEach_chkAll").prop("checked", true);
+                    $('#chartdivV').show();
+
+                    // 차트 그리는 함수에 데이터 넘겨줌.
+                    drawVisiumChart(result.coordinateData, sampleId);
+                    
+                    //chartDiv.style.backgroundImage = "url('" + tissueImg_list[sampleId] + "')"; 
+
+                    visiumBgCnt++;
+                } catch (e) {
+                    $('#spinnerV').hide(); // 스피너 숨김
+                    $('#lodingumV').hide();
+                    $('#bgHideSv').hide();
+                    console.log(e); 
+                }
+            };
+            
+            let bgCnt = 0;
+            const smple_map = {
+                1: "T204",
+                2: "T209",
+                3: "T211",
+                4: "T215",
+                5: "T219",
+                6: "T223",
+                7: "T235",
+                8: "T245",
+                9: "T247",
+                10: "T255",
+                11: "T264",
+                12: "T268",
+                13: "T276",
+                14: "T280",
+                15: "T288",
+                16: "T313",
+                17: "T317",
+                18: "T318",
+                19: "T320"
+            };
+            
+            let globalGeneName = '';
+
+            // 비지움 검색목록 가져오는 함수.
+             const getSearchVisiumList = async (e) => {
+                const searchVal = document.querySelector('.search-data').value;
+                const smplID = document.querySelector('.smplID').value;
+                
+                // console.log(smplID);
+                if (searchVal === '') {
+                    alert('Please enter the gene name.');
+                    return;
+                }
+                
+                if (chart) {
+                    chart.dispose(); // 기존 차트 제거
+                }
+
+                const chartDiv = document.getElementById("chartdivV");
+                chartDiv.style.backgroundImage = "none"; 
+
+                if (bgCnt != 0) {
+                    bgHideSeach.style.height = '220px'; 
+                }
+
+                $.blockUI({
+                    message : '', 
+                    });
+
+                // CSRF 토큰 가져오기
+                const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+                $('#spinnerSeach').show(); // 스피너 표시
+                $('#bgHideSeach').show();
+
+                try{
+                    const res = await fetch('/search_visium', {
+                        method: "POST",
+                        headers: {
+                            'Content-Type': 'application/json', // 요청 본문의 데이터 타입 지정
+                            'X-CSRFToken': csrfToken,          // CSRF 토큰 추가
+                        },
+                        body: JSON.stringify({
+                          search: searchVal,
+                        }),
+                      });
+                      
+                    const retult = await res.json();
+                    visiumTab = 1; // visium 탭 상태변환.
+                    
+                    const table_tbody = document.querySelector('.table_tbody');
+
+                    // 이전에 찾은목록이 있다면 다지우고 새로운 데이터 목록 채움.
+                    table_tbody.replaceChildren();
+                  //  console.log(retult.searchResult);
+                    // 전역 gene_nm에 넣어줌. 필요함.
+                    globalGeneName = retult.searchResult[0].gene_nm;
+
+                    $('#spinnerSeach').hide({}); // 스피너 숨김.
+                    $('#bgHideSeach').hide({});
+
+                    console.log(retult.searchResult.length);
+                    if (retult.searchResult.length > 0) {
+                        retult.searchResult.forEach((item,i) => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${item.gene_nm}</td>
+                                <td>${smple_map[item.smpl_info_seq]}</td>
+                                <td>${item.intgrt_clustr_rgin}</td>
+                                <td>${item.umap_clustr_no}</td>
+                                <td>${item.visium_spatial_gene_cnt}</td>
+                                <td><button class="btn-hover get_chartData color-9">Chart</button></td>
+                            `;
+                            table_tbody.appendChild(row);
+    
+                            const button = row.querySelector(".get_chartData");
+                            // 선택한 region별 비지움 차트그리는 함수에서 환자 smpl-id 가 필요함.
+                            smplId = item.smpl_info_seq;
+
+                            // 비지움 좌표정보 DB에서 가져오는 API함수 호출함.
+                            button.addEventListener('click', () => {
+                                visiumTab = true;
+                                chartON = true;
+                                getVisiumChartData(item.smpl_info_seq, searchVal);
+                            });
+                        });
+                    } else {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `<td class="nodata">NO DATA</td>`;
+                        table_tbody.appendChild(row);
+                    }
+
+                    bgCnt++;
+                } catch (e) {
+                    $('#spinnerSeach').hide({}); // 스피너 숨김.
+                    $('#bgHideSeach').hide({});
+                    console.log(e);
+                }           
+                $.unblockUI();     
+             };
+
+             // Visium Region type선택옵션창 보이는 함수
+             showRegionType = (value) => {
+                $('#visiumRegion').val(value);
+                $('#spinnerV').show(); // 스피너표시
+                $('#lodingumV').show();
+                $('#bgHideSv').show();
+                $('#chartdivV').hide();
+
+                //탭 차트 옵션창 보이기
+                const regionFromArr = document.querySelectorAll('.visiumForm');
+
+                regionFromArr.forEach((node, i) => {
+                    node.style.display = 'none';
+                });
+                
+                // 체크박스 초기화
+                const checkboxArrF = document.getElementsByName('VregionType');
+                checkboxArrF.forEach((box) => {
+                    box.checked = false;
+                });
+                const checkboxArrM = document.getElementsByName('VeachRegion');
+                checkboxArrM.forEach((box) => {
+                    box.checked = false;
+                });
+
+                // 초기 렌더링시 체크박스가 all체크로 선택되어 있어야함.
+                // regionType 부문.
+                $("input[name=VregionType]").prop("checked", true);
+                $("#Vregion_chkAll").prop("checked", true);
+                // Each regionType 부문.
+                $("input[name=VeachRegion]").prop("checked", true);
+                $("#VEach_chkAll").prop("checked", true);
+
+                // console.log(cellPlotsData.mainCountsList);
+                document.querySelector(`.VregionFrom${value}`).style.display = 'block';
+
+                // 차트 그리는 함수에 데이터 넘겨줌.
+                drawVisiumChart(visiumRegionData.coordinateData);
+
+                $('#spinnerV').hide({}); // 스피너 숨김
+                $('#lodingumV').hide({});
+                $('#bgHideSv').hide({});
+                $('#chartdivV').show();
+             };
+
+            // 체크박스 전체선택 or 해제 코드
+            $(document).ready(function() {
+                // UMAP - fine_celltype 체크박스 전체 선택. 
+                $("#region_chkAll").click(() => {  
+                    if($("#region_chkAll").is(":checked")) {
+                        $("input[name=regionType]").prop("checked", true); 
+                    } else {
+                        $("input[name=regionType]").prop("checked", false); 
+                    }
+                });
+                // TEXT도 클릭시 동일한 이벤트 동작
+                $(".ckhAllSU").click(() => {
+                    if(!$("#region_chkAll").is(":checked")) {
+                        $("#region_chkAll").prop("checked", true);
+                        $("input[name=regionType]").prop("checked", true); 
+                    } else {
+                        $("#region_chkAll").prop("checked", false);
+                        $("input[name=regionType]").prop("checked", false); 
+                    }
+                });
+
+                // cellTypef 요소들이 동적으로 생성된다면 이벤트 위임을 사용해야 할 수도 있음.
+                $(document).on("click", "input[name=regionType]", () => {
+                    const total = $("input[name=regionType]").length;
+                    const checked = $("input[name=regionType]:checked").length;
+                    // 전체 선택 해제 풀릴때
+                    if(total != checked) {
+                        $("#region_chkAll").prop("checked", false);
+                    } else {
+                        $("#region_chkAll").prop("checked", true);
+                    }
+                });
+
+                // Visium - region_type 체크박스 전체 선택. 
+                $("#Vregion_chkAll").click(() => {
+                    if($("#Vregion_chkAll").is(":checked")) {
+                        $("input[name=VregionType]").prop("checked", true);
+                    }
+                    else {
+                        $("input[name=VregionType]").prop("checked", false); 
+                    }
+                });
+
+                // TEXT도 클릭시 동일한 이벤트 동작
+                $(".ckhAllSv1").click(() => {    
+                    if(!$("#Vregion_chkAll").is(":checked")) {
+                        $("#Vregion_chkAll").prop("checked", true);
+                        $("input[name=VregionType]").prop("checked", true); 
+                    } else {
+                        $("#Vregion_chkAll").prop("checked", false);
+                        $("input[name=VregionType]").prop("checked", false); 
+                    }
+                });
+
+                // cellTypef 요소들이 동적으로 생성된다면 이벤트 위임을 사용해야 할 수도 있음.
+                $(document).on("click", "input[name=VregionType]", () => {
+                    const total = $("input[name=VregionType]").length;
+                    const checked = $("input[name=VregionType]:checked").length;
+                    // 전체 선택 해제 풀릴때
+                    if(total != checked) {
+                        $("#Vregion_chkAll").prop("checked", false);
+                    } else {
+                        $("#Vregion_chkAll").prop("checked", true);
+                    }
+                });
+
+                // Visium - EachRegion_type 체크박스 전체 선택. 
+                $("#VEach_chkAll").click(() => {
+                    if($("#VEach_chkAll").is(":checked")) {
+                        $("input[name=VeachRegion]").prop("checked", true);
+                    }
+                    else {
+                        $("input[name=VeachRegion]").prop("checked", false); 
+                    }
+                });
+
+                // TEXT도 클릭시 동일한 이벤트 동작
+                $(".ckhAllSv2").click(() => {    
+                    if(!$("#VEach_chkAll").is(":checked")) {
+                        $("#VEach_chkAll").prop("checked", true);
+                        $("input[name=VeachRegion]").prop("checked", true); 
+                    } else {
+                        $("#VEach_chkAll").prop("checked", false);
+                        $("input[name=VeachRegion]").prop("checked", false); 
+                    }
+                });
+
+                // cellTypef 요소들이 동적으로 생성된다면 이벤트 위임을 사용해야 할 수도 있음.
+                $(document).on("click", "input[name=VeachRegion]", () => {
+                    const total = $("input[name=VeachRegion]").length;
+                    const checked = $("input[name=VeachRegion]:checked").length;
+                    // 전체 선택 해제 풀릴때
+                    if(total != checked) {
+                        $("#VEach_chkAll").prop("checked", false);
+                    } else {
+                        $("#VEach_chkAll").prop("checked", true);
+                    }
+                });
+
+            });
+
+
+        </script>
+
+    {% endblock %}
+
+    <!-- 콘테이너 -->
+        {% block container %}
+            {% block titleArea %}
+                <div class="sub-vis-area">
+                    <div class="sub-vis-txt">
+                        <h2 class="page-tit-h2">Visium</h2>
+                        <div class="path">
+                            <a class="home" href="/">HOME</a>
+                            <a class="page" href="">SEARCH</a>
+                        </div>
+                    </div>
+                </div>
+            {% endblock %}
+
+        <!-- 콘텐츠 -->	
+        {% block mainContent%}
+        <div id="contents" class="bach_search">
+            <div class="cont-inner">
+                {% block schBox %}
+                    <h3 class="page-tit-h3">Search Results</h3>
+                    <form class="cont-sch-box" method="post" onSubmit="return false;">
+                        {% csrf_token %}
+                        <span class="input-set">
+                            <label for="ipt1-2">Sample ID</label>
+                            <select id="ipt1-2" name="smpl-id" class="smplID">
+                                <option value="">All</option>
+                                <option value="1">T204</option>
+                                <option value="2">T209</option>
+                                <option value="3">T211</option>
+                                <option value="4">T215</option>
+                                <option value="5">T219</option>
+                                <option value="6">T223</option>
+                                <option value="7">T235</option>
+                                <option value="8">T245</option>
+                                <option value="9">T247</option>
+                                <option value="10">T255</option>
+                                <option value="11">T264</option>
+                                <option value="12">T268</option>
+                                <option value="13">T276</option>
+                                <option value="14">T280</option>
+                                <option value="15">T288</option>
+                                <option value="16">T313</option>
+                                <option value="17">T317</option>
+                                <option value="18">T318</option>
+                                <option value="19">T320</option>
+                            </select>
+                            <label for="ipt1-2">Gene</label>
+                            <input type="text" id="geneSearch" name="search" class="search-data input-data">
+                            <button type="button" class="btn btn-md btn-primary" onclick="getSearchVisiumList()">Search</button>
+                        </span>
+                    </form>
+                {% endblock %}
+
+                <br>
+                <!-- 테이블(스크롤) -->
+                <div class="tbl-board-box tbl-board-scroll">
+                    <div id="bgHideSeach" style="display:none;"></div>
+                    <div id="spinnerSeach" class="spinner-border text-warning" role="status" style="display:none;">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <table class="tbl-board">
+                        <caption>리스트테이블</caption>
+                        <colgroup>
+                            <col>
+                            <col>
+                            <col>
+                            <col>
+                            <col>
+                            <col>
+                        </colgroup>
+                        <thead>
+                            <tr>
+                                <th scope="col">Gene</th>
+                                <th scope="col">Sample No</th>
+                                <th scope="col">Cluster Region</th>
+                                <th scope="col">Clusters No</th>
+                                <th scope="col">Spatial Gene Cnt</th>
+                                <th scope="col">Chart</th>
+                            </tr>
+                        </thead>
+                        <tbody class="table_tbody">
+                            <tr><td class="nodata">NO DATA</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- //테이블(스크롤) -->
+                <!-- 탭 -->
+                <ul class="tab-menu">
+                    <li class="on menu"><a onclick="showTab(this, 1)">UMAP</a></li>
+                    <li class="menu"><a onclick="showTab(this, 2)">Visium</a></li>
+                </ul>
+                <!-- // 탭1 -->
+                <div class="result-wrap map_box map_box1 search-resWrp">
+                    <div id="bgHideSu"></div>
+                    <div id="spinnerp" >
+                        <div class="progressbar">
+                            <div class="side top">
+                                <div class="barj"></div>
+                            </div>
+                            <div class="side bottom">
+                                <div class="barj"></div>
+                            </div>
+                            <div class="side front">
+                                <div class="barj"></div>
+                            </div>
+                            <div class="side back">
+                                <div class="barj"></div> 
+                            </div>
+                            <div class="side left"></div>
+                        </div>
+                    </div>
+                    <div id="lodingum">Loding...</div>
+                    <form class="form-area" method="POST">
+                        {% csrf_token %}
+                        <div class="cols-group">
+                            <div class="col">
+                                <div class="form-box regionFrom">
+                                    <span class="tit"><input type="checkbox" id="region_chkAll"/><span class="ckhAllSU">Region</span></span>
+                                    <div class="chk-list region-list">
+                                        <!-- 동적 생성-->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-lg btn-primary" onclick="getSelectedCell()">Submit</button>
+                    </form>
+                    <div class="chart-area">
+                        <div class="chart">
+                            <div id="chartdivUM" style="display:none;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- // 탭2 -->
+                <div class="result-wrap map_box map_box2 saerch_visiWrap" style="display:none;">
+                    <div id="bgHideSv"></div>
+                    <div id="spinnerV" >
+                        <div class="progressbar">
+                            <div class="side top">
+                                <div class="barj"></div>
+                            </div>
+                            <div class="side bottom">
+                                <div class="barj"></div>
+                            </div>
+                            <div class="side front">
+                                <div class="barj"></div>
+                            </div>
+                            <div class="side back">
+                                <div class="barj"></div> 
+                            </div>
+                            <div class="side left"></div>
+                        </div>
+                    </div>
+                    <div id="lodingumV">Loding...</div>
+                    <input type="hidden" id="visiumRegion" value="1">
+                    <form class="form-area" method="POST">
+                        {% csrf_token %}
+                        <div class="cols-group">
+                            <div class="col">
+                                <select onchange="showRegionType(this.value)" id="selectlPotsCellType">
+                                    <option value=1>Intgrt Region</option>
+                                    <option value=2>Each Smpl Region</option>
+                                </select>
+                                <div class="form-box visiumForm VregionFrom1">
+                                    <span class="tit"><input type="checkbox" id="Vregion_chkAll"/><span class="ckhAllSv1">Intgrt Region</span></span>
+                                    <div class="chk-list Vregion-list">
+                                         <!-- 동적 생성-->
+                                    </div>
+                                </div>
+                                <div class="form-box visiumForm VregionFrom2" style="display: none;">
+                                    <span class="tit"><input type="checkbox" id="VEach_chkAll"/><span class="ckhAllSv2">Each Smpl Region</span></span>
+                                    <div class="chk-list Vregion-list">
+                                         <!-- 동적 생성-->
+                                    </div>
+                                </div>
+                            </div>
+                            {% comment %} <div class="col">
+                                <div class="form-box">
+                                    <span class="tit">UMAP</span>
+                                    <div class="chk-list" style="max-height: 135px;">
+                                        <span class="input-set">
+                                            <input type="checkbox" id="ipt3-1" name="ipt3"> 
+                                            <label for="ipt3-1">UMAP legend</label>
+                                        </span>
+                                        <span class="input-set">
+                                            <input type="checkbox" id="ipt3-2" name="ipt3"> 
+                                            <label for="ipt3-2">UMAP</label>
+                                        </span>
+                                        <span class="input-set">
+                                            <input type="checkbox" id="ipt3-3" name="ipt3"> 
+                                            <label for="ipt3-3">UMAP</label>
+                                        </span>
+                                        <span class="input-set">
+                                            <input type="checkbox" id="ipt3-4" name="ipt3"> 
+                                            <label for="ipt3-4">UMAP</label>
+                                        </span>
+                                        <span class="input-set">
+                                            <input type="checkbox" id="ipt3-5" name="ipt3"> 
+                                            <label for="ipt3-5">UMAP</label>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="form-box">
+                                    <span class="tit">Patients</span>
+                                    <div class="chk-list" style="max-height: 135px;">
+                                        <span class="input-set">
+                                            <input type="checkbox" id="ipt4-1" name="ipt4"> 
+                                            <label for="ipt4-1">Patients legend</label>
+                                        </span>
+                                        <span class="input-set">
+                                            <input type="checkbox" id="ipt4-2" name="ipt4"> 
+                                            <label for="ipt4-2">Patients</label>
+                                        </span>
+                                        <span class="input-set">
+                                            <input type="checkbox" id="ipt4-3" name="ipt4"> 
+                                            <label for="ipt4-3">Patients</label>
+                                        </span>
+                                        <span class="input-set">
+                                            <input type="checkbox" id="ipt4-4" name="ipt4"> 
+                                            <label for="ipt4-4">Patients</label>
+                                        </span>
+                                        <span class="input-set">
+                                            <input type="checkbox" id="ipt4-5" name="ipt4"> 
+                                            <label for="ipt4-5">Patients</label>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div> {% endcomment %}
+                        </div>
+                        <button type="button" class="btn btn-lg btn-primary" onclick="getSelectedRegion()">Submit</button>
+                    </form>
+                    <div class="chart-area">
+                        <div class="chart inner">
+                            <div id="chartdivV" style="display:none;"></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        {% endblock %}
+        <!-- //콘텐츠 -->
+
+        {% endblock %}
+
+    <!-- //콘테이너 -->

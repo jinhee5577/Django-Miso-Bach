@@ -1,0 +1,296 @@
+{% extends './layout/sub_layout.html' %}
+    {% load static %}
+
+    {% block script%}
+        <!-- Bootstrap JS -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="{% static 'js/bach/single_cell_chart.js' %}"></script>
+        <script type="text/javascript">
+            $(document).ready(function() {
+                // UMAP - fine_celltype 체크박스 전체 선택. 
+                $("#fineChkAll").click(() => {
+                    if($("#fineChkAll").is(":checked")) {
+                        $("input[name=cellTypef]").prop("checked", true);
+                    }
+                    else {
+                        $("input[name=cellTypef]").prop("checked", false); 
+                    }
+                });
+
+                // TEXT도 클릭시 동일한 이벤트 동작
+                $(".ckhAllCM1").click(() => {    
+                    if(!$("#fineChkAll").is(":checked")) {
+                        $("#fineChkAll").prop("checked", true);
+                        $("input[name=cellTypef]").prop("checked", true); 
+                    } else {
+                        $("#fineChkAll").prop("checked", false);
+                        $("input[name=cellTypef]").prop("checked", false); 
+                    }
+                });
+
+                //  cellTypef 요소들이 동적으로 생성된다면 이벤트 위임을 사용해야 할 수도 있음.
+                $(document).on("click", "input[name=cellTypef]", () => {
+                    // console.log('실행 되냐구!!')
+                    const total = $("input[name=cellTypef]").length;
+                    const checked = $("input[name=cellTypef]:checked").length;
+                    // 전체 선택 해제 풀릴때
+                    if(total != checked) {
+                        $("#fineChkAll").prop("checked", false);
+                    } else {
+                        $("#fineChkAll").prop("checked", true);
+                    }
+                });
+
+                // UMAP - mian_celltype 체크박스 전체 선택.
+                $("#main_chkAll").click(() => {
+                    if($("#main_chkAll").is(":checked")) {
+                        $("input[name=cellTypem]").prop("checked", true);
+                    }
+                    else {
+                        $("input[name=cellTypem]").prop("checked", false); 
+                    }
+                });
+
+                // TEXT도 클릭시 동일한 이벤트 동작
+                $(".ckhAllCM2").click(() => {    
+                    if(!$("#main_chkAll").is(":checked")) {
+                        $("#main_chkAll").prop("checked", true);
+                        $("input[name=cellTypem]").prop("checked", true); 
+                    } else {
+                        $("#main_chkAll").prop("checked", false);
+                        $("input[name=cellTypem]").prop("checked", false); 
+                    }
+                });
+
+                // cellTypef 요소들이 동적으로 생성된다면 이벤트 위임을 사용해야 할 수도 있음.
+                $(document).on("click", "input[name=cellTypem]", () => {
+                    const total = $("input[name=cellTypem]").length;
+                    const checked = $("input[name=cellTypem]:checked").length;
+                    // 전체 선택 해제 풀릴때
+                    if(total != checked) {
+                        $("#main_chkAll").prop("checked", false);
+                    } else {
+                        $("#main_chkAll").prop("checked", true);
+                    }
+                });
+
+                // PLOTS - fine_celltype 체크박스 전체 선택. 
+                $("#fineChkAllP").click(() => {
+                    if($("#fineChkAllP").is(":checked")) {
+                        $("input[name=cellTypeSf]").prop("checked", true);
+                    }
+                    else {
+                        $("input[name=cellTypeSf]").prop("checked", false); 
+                    }
+                });
+
+                // TEXT도 클릭시 동일한 이벤트 동작
+                $(".ckhAllCP1").click(() => {    
+                    if(!$("#fineChkAllP").is(":checked")) {
+                        $("#fineChkAllP").prop("checked", true);
+                        $("input[name=cellTypeSf]").prop("checked", true); 
+                    } else {
+                        $("#fineChkAllP").prop("checked", false);
+                        $("input[name=cellTypeSf]").prop("checked", false); 
+                    }
+                });
+
+                //  cellTypef 요소들이 동적으로 생성된다면 이벤트 위임을 사용해야 할 수도 있음.
+                $(document).on("click", "input[name=cellTypeSf]", () => {
+                    // console.log('실행 되냐구!!')
+                    const total = $("input[name=cellTypeSf]").length;
+                    const checked = $("input[name=cellTypeSf]:checked").length;
+                    // 전체 선택 해제 풀릴때
+                    if(total != checked) {
+                        $("#fineChkAllP").prop("checked", false);
+                    } else {
+                        $("#fineChkAllP").prop("checked", true);
+                    }
+                });
+
+                // PLOTS - mian_celltype 체크박스 전체 선택.
+                $("#mainChkAllP").click(() => {
+                    if($("#mainChkAllP").is(":checked")) {
+                        $("input[name=cellTypeSm]").prop("checked", true);
+                    }
+                    else {
+                        $("input[name=cellTypeSm]").prop("checked", false); 
+                    }
+                });
+
+                // TEXT도 클릭시 동일한 이벤트 동작
+                $(".ckhAllCP2").click(() => {    
+                    if(!$("#mainChkAllP").is(":checked")) {
+                        $("#mainChkAllP").prop("checked", true);
+                        $("input[name=cellTypeSm]").prop("checked", true); 
+                    } else {
+                        $("#mainChkAllP").prop("checked", false);
+                        $("input[name=cellTypeSm]").prop("checked", false); 
+                    }
+                });
+
+                //  cellTypef 요소들이 동적으로 생성된다면 이벤트 위임을 사용해야 할 수도 있음.
+                $(document).on("click", "input[name=cellTypeSm]", () => {
+                    const total = $("input[name=cellTypeSm]").length;
+                    const checked = $("input[name=cellTypeSm]:checked").length;
+                    // 전체 선택 해제 풀릴때
+                    if(total != checked) {
+                        $("#mainChkAllP").prop("checked", false);
+                    } else {
+                        $("#mainChkAllP").prop("checked", true);
+                    }
+                });
+
+                getSingleCellUmapData();
+            });
+        </script>
+
+    {% endblock %}
+
+    <!-- 콘테이너 -->
+        {% block container %}
+            {% block titleArea %}
+                <div class="sub-vis-area">
+                    <div class="sub-vis-txt">
+                        <h2 class="page-tit-h2">Single Cell</h2>
+                        <div class="path">
+                            <a class="home" href="/">HOME</a>
+                            <a class="page" href="">Single Cell</a>
+                        </div>
+                    </div>
+                </div>
+            {% endblock %}
+
+        <!-- 콘텐츠 -->	
+        {% block mainContent%}
+        <div id="contents" class="bach_search SingleCell">
+            <div class="cont-inner">
+                <br>
+                <!-- 탭 -->
+                <ul class="tab-menu">
+                    <li class="on menu"><a onclick="showTab(this, 1)">UMAP</a></li>
+                    <li class="menu"><a onclick="showTab(this, 2)">Plots</a></li>
+                </ul>
+                <!-- // 탭1 -->
+                <div class="result-wrap map_box map_box1">
+                    <div id="bgHidef"></div>
+                    <div id="spinnerf">
+                        <div class="progressbar">
+                            <div class="side top">
+                                <div class="barj"></div>
+                            </div>
+                            <div class="side bottom">
+                                <div class="barj"></div>
+                            </div>
+                            <div class="side front">
+                                <div class="barj"></div>
+                            </div>
+                            <div class="side back">
+                                <div class="barj"></div> 
+                            </div>
+                            <div class="side left"></div>
+                        </div>
+                    </div>
+                    <div id="lodingumSU">Loding...</div>
+                    <input type="hidden" id="umapCell" value="1">
+                    <form class="form-area" method="POST">
+                        {% csrf_token %}
+                        <div class="cols-group">
+                            <div class="col">
+                                <select onchange="showUmapCellType(this.value)" id="selectlUmapCellType">
+                                    <option value=1>FINE CELL TYPE</option>
+                                    <option value=2>MAIN CELL TYPE</option>
+                                </select>
+                                <div class="form-box cellFrom cellFrom1">
+                                    <span class="tit"><input type="checkbox" id="fineChkAll"/><span class="ckhAllCM1">FINE CELL TYPE</span></span>
+                                    <div class="chk-list chk-listf fine_celltype">
+                                        {% comment %} <span class="input-set">
+                                            <input type="checkbox" id="ipt2-1" name="ipt2"> 
+                                            <label for="ipt2-1"><span class="ico-color" style="background-color: #e41a1c;"></span>Tumor</label>
+                                        </span> {% endcomment %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="form-box cellFrom cellFrom2" style="display: none;">
+                                    <span class="tit"><input type="checkbox" id="main_chkAll"/><span class="ckhAllCM2">MAIIN CELL TYPE</span></span>
+                                    <div class="chk-list chk-listf main_celltype">
+                                        {% comment %} <span class="input-set">
+                                            <input type="checkbox" id="ipt3-1" name="ipt3"> 
+                                            <label for="ipt3-1">UMAP legend</label>
+                                        </span> {% endcomment %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-lg btn-primary" onclick="getSelectedUmapCell()">Submit</button>
+                    </form>
+                    <div class="chart-area">
+                        <div class="chart">
+                           <div id="chartdiv"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- // 탭2 -->
+                <div class="result-wrap map_box map_box2" id="single-cell-Plots" style="display:none;">
+                    <div id="bgHidep"></div>
+                    <div id="spinnerp">
+                        <div class="progressbar">
+                            <div class="side top">
+                                <div class="barj"></div>
+                            </div>
+                            <div class="side bottom">
+                                <div class="barj"></div>
+                            </div>
+                            <div class="side front">
+                                <div class="barj"></div>
+                            </div>
+                            <div class="side back">
+                                <div class="barj"></div> 
+                            </div>
+                            <div class="side left"></div>
+                        </div>
+                    </div>
+                    <div id="lodingumSP">Loding...</div>
+                    <input type="hidden" id="plotsCell" value="1">
+                    <form class="form-area" method="POST">
+                        {% csrf_token %}
+                        <div class="cols-group">
+                            <div class="col">
+                                <select onchange="showPlotsCellType(this.value)" id="selectlPotsCellType">
+                                    <option value=1>FINE CELL TYPE</option>
+                                    <option value=2>MAIIN CELL TYPE</option>
+                                </select>
+                                <div class="form-box PlotsFrom PlotsFrom1">
+                                    <span class="tit"><input type="checkbox" id="fineChkAllP"/><span class="ckhAllCP1"> Plots FINE CELL TYPE</span></span>
+                                    <div class="chk-list chk-listP"></div>
+                                </div>
+                                <div class="form-box PlotsFrom PlotsFrom2" style="display: none;">
+                                    <span class="tit"><input type="checkbox" id="mainChkAllP"/><span class="ckhAllCP2">Plots MAIIN CELL TYPE</span></span>
+                                    <div class="chk-list chk-listP">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-lg btn-primary" onclick="getSelectedCell()" >Submit</button>
+                    </form>
+                    <div class="chart-area">
+                        <div class="chart inner">
+                            <div id="chartdivPlots2"></div>
+                            <div id="chartdivPlots"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        
+
+        {% endblock %}
+        <!-- //콘텐츠 -->
+
+        {% endblock %}
+
+    <!-- //콘테이너 -->

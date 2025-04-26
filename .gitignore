@@ -1,0 +1,6 @@
+venv/
+__pycache__
+*.pyc
+*.bak
+*.sqlite3
+static/icn3d/
